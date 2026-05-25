@@ -1,0 +1,12 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git push *)",
+      "PowerShell(pnpm build)",
+      "PowerShell(pnpm lint)",
+      "PowerShell(pnpm dev)",
+      "Read(//c/Users/skord/AppData/Local/Temp/claude/d--Workspace-Code-Personal-cv-next/fc0c36a0-8460-4dd9-abfc-733820920c68/tasks/**)",
+      "PowerShell($r1 = Invoke-WebRequest -Uri \"http://localhost:5173/\" -UseBasicParsing; $r2 = Invoke-WebRequest -Uri \"http://localhost:5173/src/App.tsx\" -UseBasicParsing; $r3 = Invoke-WebRequest -Uri \"http://localhost:5173/src/data/cv.ts\" -UseBasicParsing; \"/         => $\\($r1.StatusCode\\) \\($\\($r1.RawContentLength\\) bytes\\)\"; \"/App.tsx  => $\\($r2.StatusCode\\) \\($\\($r2.RawContentLength\\) bytes\\)\"; \"/cv.ts    => $\\($r3.StatusCode\\) \\($\\($r3.RawContentLength\\) bytes\\)\"; \"---HTML head---\"; \\($r1.Content -split \"`n\" | Select-Object -First 14\\) -join \"`n\")"
+    ]
+  }
+}

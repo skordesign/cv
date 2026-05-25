@@ -22,9 +22,9 @@
 ## Sections
 
 In render order in [`src/App.tsx`](../src/App.tsx):
-About → Experience → Education → Skills → **Highlights** → Projects → Interests.
+About → Experience → Education → Skills → Projects → Interests.
 
-The **Highlights** section is a placeholder for post-Sept-2023 work the user opted to fill in later. Update by editing `highlights` array in `src/data/cv.ts`.
+The **Highlights** section was removed from render on 2026-05-25 (file deleted, `highlights` array in `src/data/cv.ts` emptied). Type `Highlight` is preserved for future re-enable — recreate `src/sections/Highlights.tsx` and add an entry back to the array when ready.
 
 ## Deploy
 
@@ -43,7 +43,19 @@ The legacy Bootstrap-4 + Firebase CV at [`../../cv`](../../cv) (last updated Sep
 - Skipped a `tailwind.config.ts`: Tailwind v4 prefers CSS-first config via `@theme` blocks in the main stylesheet.
 - Hand-wrote shadcn primitives instead of running the CLI (interactive prompts incompatible with non-TTY harness).
 
+## UI design system (2026-05-25 rework)
+
+- **Look**: editorial / typographic. `Fraunces` (variable serif, Google Fonts) for headings, `Inter` for body. Hairline `border-border/40` dividers, monochrome + single `--brand` accent, **no card chrome**.
+- **No sidebar**. Navigation is a floating top pill ([`src/components/TopNav.tsx`](../src/components/TopNav.tsx)) that fades in after the user scrolls past ~60vh, with anchor links, active-section highlight via `IntersectionObserver`, and the theme toggle.
+- **Scroll FX**: native only — no `framer-motion`, no `react-intersection-observer`.
+  - [`Reveal.tsx`](../src/components/Reveal.tsx) wraps content in `opacity-0 translate-y-3` → `opacity-100 translate-y-0` via `IntersectionObserver`. Accepts `delay` (ms) for staggered groups. Honors `prefers-reduced-motion`.
+  - [`ScrollProgress.tsx`](../src/components/ScrollProgress.tsx) renders a 2px brand-color bar at the top, width via `scaleX` driven by `scrollY / (scrollHeight - innerHeight)`.
+- **Section anatomy**: eyebrow label (uppercase, small, brand) → display title (serif, light) → content. Items use a `[10rem_1fr]` grid with date on the left, body on the right, hairline divider between.
+- **scroll-mt-28** on sections to clear the floating pill on anchor jumps.
+
 ## Open work
 
-- Highlights section content (user-supplied).
+- Highlights section content (user-supplied). When re-enabled: recreate `src/sections/Highlights.tsx`, restore `highlights` data, add the anchor to `TopNav.navItems`.
+- Visual scroll-fx **not yet eyeballed** in a real browser — needs a human pass on `pnpm dev`.
+- Unused shadcn primitives (`ui/card.tsx`, `ui/badge.tsx`, `ui/avatar.tsx`, `ui/separator.tsx`) kept as scaffolding. Delete if confirmed never needed.
 - No CI workflow — Vercel handles build on push.

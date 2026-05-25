@@ -1,161 +1,155 @@
-# cv_next — Implementation Plan
+# cv_next — UI Rework Plan
 
-**Status:** ✅ Completed 2026-05-21
-**Created:** 2026-05-21
+**Status:** ✅ Completed 2026-05-25
+**Created:** 2026-05-25
 **Owner:** Phat Huynh (skordesign@outlook.com)
+
+> Supersedes the previous "Implementation Plan" (completed 2026-05-21). The original scaffold + content port is unchanged; only the presentation layer is being reworked.
 
 ---
 
 ## 1. Problem Statement
 
-The old CV at [`../cv`](../../cv) is a static Bootstrap 4 + jQuery site deployed on Firebase, last updated **September 2023**. It has become stale (no entries since the user's last role change) and uses an aging stack. Build a fresh, Vercel-ready CV at [`cv_next/`](../) that:
+The current CV uses a fixed left sidebar nav and shadcn-style card blocks. The user wants:
 
-- Preserves all factual content from the old CV (experience, education, skills, projects).
-- Adds a **Highlights** placeholder section for post-2023 work (user will fill in later).
-- Uses a modern FE-only stack — no backend, no Firebase.
-- Deploys to Vercel with zero config beyond `vercel.json`.
+- **Minimalist look** — typographic / editorial, hairline dividers, generous whitespace, one accent color.
+- **Scroll effects** — content fades + slides up as it enters the viewport, plus a thin scroll-progress bar at the top.
+- **No sidebar** — replace with a small floating top pill nav that appears on scroll and highlights the active section.
+- **Drop the Highlights placeholder section** until real content exists.
 
----
-
-## 2. Decisions (Confirmed)
-
-| Decision | Choice | Rationale |
-|---|---|---|
-| Framework | **Vite + React 18 + TypeScript** | Lightweight SPA, fast dev server, static build deployable anywhere. |
-| Styling | **Tailwind CSS v4 + shadcn/ui** | Utility-first + accessible primitives, easy dark mode. |
-| Routing | None (single page, anchor scroll) | Matches old CV UX. |
-| Icons | `lucide-react` + simple SVG brand marks | shadcn/ui's default; no devicon-style CDN. |
-| Hosting | **Vercel** (static build) | User requirement. |
-| Highlights | **Placeholder section** with TODO | User will add content later. |
-| Current role | Beetech Solution — `.NET Tech Lead` — Oct 2022 → **Present** | Confirmed unchanged. |
-| Memory persistence | **Skip** | User opted out. |
-| Package manager | **pnpm** (fallback to npm if not installed) | Faster + smaller `node_modules`. |
-| Node version | 20+ (Vercel default) | — |
+All CV data, the data model, and the build/deploy pipeline stay as-is. This is a pure presentation-layer rework.
 
 ---
 
-## 3. Architecture
+## 2. Decisions (Confirmed by user)
 
-```
-cv_next/
-├── docs/CURRENT_PLAN.md          (this file)
-├── public/                        static assets (profile.png ported from old CV)
-├── src/
-│   ├── CLAUDE.md                 techstack + coding standards
-│   ├── main.tsx                  React entry
-│   ├── App.tsx                   layout shell (sidebar nav + sections)
-│   ├── index.css                 Tailwind import + theme tokens
-│   ├── data/
-│   │   └── cv.ts                 single source of truth — typed CV data
-│   ├── components/
-│   │   ├── Sidebar.tsx           sticky left nav with avatar
-│   │   ├── Section.tsx           reusable section wrapper
-│   │   ├── ResumeItem.tsx        title / subheading / date pattern
-│   │   ├── SkillBadge.tsx        chips for tech list
-│   │   └── ui/                   shadcn/ui primitives (Button, Card, Separator, Badge)
-│   └── sections/
-│       ├── About.tsx
-│       ├── Experience.tsx
-│       ├── Education.tsx
-│       ├── Skills.tsx
-│       ├── Highlights.tsx        (NEW — placeholder)
-│       ├── Projects.tsx
-│       └── Interests.tsx
-├── index.html
-├── vite.config.ts
-├── tsconfig.json
-├── tailwind.config.ts            (Tailwind v4 uses CSS-first config, kept minimal)
-├── components.json               shadcn/ui config
-├── vercel.json                   SPA rewrites
-├── package.json
-└── README.md
-```
-
-### Data model (src/data/cv.ts)
-
-```ts
-export type Experience = { title: string; company: string; period: string; description: string };
-export type EducationEntry = { school: string; degree: string; field?: string; gpa?: string; period: string };
-export type Project = { name: string; org: string; role: string; task: string; tech: string; period: string; link?: string; failed?: boolean };
-export type Highlight = { title: string; description: string; tags?: string[] };  // placeholder section
-```
+| Decision | Choice |
+|---|---|
+| Navigation | **Floating top pill** — centered, semi-transparent, anchors + active highlight + theme toggle, appears on scroll past hero |
+| Scroll effect | **Fade + slide-up on enter** via IntersectionObserver + CSS (no framer-motion) |
+| Visual style | **Typographic / editorial** — display heading, hairline dividers, monochrome + single accent (brand), no cards |
+| Theme toggle | **Keep** (lives in the floating pill / top-right) |
+| Scroll progress | **Add** — thin bar fixed at top, width = scroll % |
+| Highlights section | **Drop** — remove from render & nav (data file stays, placeholder entry deleted) |
+| Sidebar.tsx | **Delete** — dead code not kept |
+| Lib additions | **None** — no framer-motion, no react-intersection-observer; native IntersectionObserver + Tailwind transitions |
 
 ---
 
-## 4. Files to Create
+## 3. Approach
 
-All under `cv_next/` (folder exists but empty):
+### 3.1 Layout / components
 
-- `package.json`, `pnpm-lock.yaml` (or `package-lock.json`)
-- `vite.config.ts`, `tsconfig.json`, `tsconfig.node.json`
-- `index.html`, `src/main.tsx`, `src/App.tsx`, `src/index.css`
-- `src/CLAUDE.md` (techstack + standards, written before coding per PDVS step 1)
-- `src/data/cv.ts` (port from old `cv/public/html/*.html`)
-- `src/components/{Sidebar,Section,ResumeItem,SkillBadge}.tsx`
-- `src/components/ui/{button,card,separator,badge}.tsx` (shadcn/ui)
-- `src/sections/{About,Experience,Education,Skills,Highlights,Projects,Interests}.tsx`
-- `public/profile.png` (copied from [`../cv/public/img/profile.png`](../../cv/public/img/profile.png) if present)
-- `vercel.json`, `.gitignore`, `README.md`
-- `CHANGELOGS.md`, `.claude/MEMORY.md`
+- **Delete** `src/components/Sidebar.tsx`.
+- **New** `src/components/TopNav.tsx` — floating pill with anchor links, active-section highlight, theme toggle. Shows after user scrolls past the hero (~80% of first viewport).
+- **New** `src/components/ScrollProgress.tsx` — fixed 2px bar at top, width driven by `scroll / (scrollHeight - innerHeight)`.
+- **New** `src/components/Reveal.tsx` — thin wrapper that adds `opacity-0 translate-y-3` and toggles to `opacity-100 translate-y-0` once visible via IntersectionObserver. Honors `prefers-reduced-motion` (skips animation, shows immediately).
+- **Update** `src/components/Section.tsx` — drop the heavy border + uppercase title style; replace with hairline top rule + small uppercase eyebrow label + large display title. Wrap children in `<Reveal>` group.
+- **Update** `src/components/ResumeItem.tsx` — strip card chrome, switch to a typographic two-column layout (date small on the left/top, content body on the right). Hairline divider between items.
+- **Update** `src/components/SkillBadge.tsx` — drop the shadcn Badge, render as plain inline-block with subtle border + monospace tracking.
 
-## 5. Files NOT to Create
+### 3.2 Sections
 
-- No tests (no testing requirement stated; would add bloat for a static CV).
-- No CI workflow (Vercel handles build on push).
-- No backend / API routes.
+- **About / hero** — full-viewport, name in display weight, role + tagline below, contact line, summary list. No card. Removes the "min-h-screen flex items-center" hack — replaced by an editorial hero with breathing room.
+- **Experience / Education / Projects** — keep data shape, restyle with the new `ResumeItem`. Project items lose the left border + dl grid; switch to a tighter typographic list.
+- **Skills** — group label as eyebrow, items as the new `SkillBadge` inline list. "Worked on" becomes a plain bulleted list (no `Check` icon, replaced with a hairline left rule).
+- **Highlights** — **removed** from `App.tsx` and from the nav. Data entry deleted from `src/data/cv.ts` (the type stays for future re-enable).
+- **Interests** — minor type/spacing tweaks only.
+
+### 3.3 App shell
+
+- `App.tsx` no longer renders `<Sidebar />`. Instead renders `<ScrollProgress />`, `<TopNav />`, then sections directly. No `lg:ml-72` offset.
+- Hero (`About`) gets a top-right corner cluster (theme toggle + socials icons) — visible while the pill is hidden.
+
+### 3.4 Theme + typography
+
+- `index.css` — add display font hookup. Use `Fraunces` (variable serif, Google Fonts) for headings, keep `Inter` for body. Loaded via `<link>` in `index.html`.
+- Tweak `--brand` token slightly if it reads too saturated against the new monochrome palette (decide during build, not pre-commit).
+
+### 3.5 Scroll mechanics
+
+- `html { scroll-behavior: smooth }` stays.
+- `scroll-mt-*` on sections increased to clear the floating pill nav.
+- Reveal uses `rootMargin: "0px 0px -10% 0px"` and `threshold: 0.1` — fires slightly before fully in view.
 
 ---
 
-## 6. Test Strategy
+## 4. Files to create / modify / delete
 
-This is a static informational site with no business logic. **No unit tests.** Verification is limited to:
+**Create**
+- `src/components/TopNav.tsx`
+- `src/components/ScrollProgress.tsx`
+- `src/components/Reveal.tsx`
 
-1. `pnpm run build` — TypeScript + Vite produce a clean static bundle.
-2. `pnpm run lint` — ESLint passes (default Vite React-TS preset).
-3. `pnpm run dev` — manual smoke test: sections render, nav scrolls, responsive layout works.
+**Modify**
+- `src/App.tsx` — swap shell composition
+- `src/index.css` — display font, refined tokens, reveal utilities if needed
+- `index.html` — Google Fonts preconnect + stylesheet link for Fraunces
+- `src/components/Section.tsx` — editorial layout
+- `src/components/ResumeItem.tsx` — strip chrome
+- `src/components/SkillBadge.tsx` — flat style
+- `src/sections/About.tsx` — hero rework + corner cluster
+- `src/sections/Experience.tsx`, `Education.tsx`, `Projects.tsx`, `Skills.tsx`, `Interests.tsx` — style tweaks (data unchanged)
+- `src/data/cv.ts` — drop placeholder Highlight entry (keep `Highlight` type)
+- `src/CLAUDE.md` — document the new components + scroll-fx conventions
+- `CHANGELOGS.md` — append rework entry
+- `.claude/MEMORY.md` — append new conventions (nav, reveal, typography)
 
-If any of the three fails, fix before declaring done (max 3 attempts per failure per PDVS).
+**Delete**
+- `src/components/Sidebar.tsx`
+- `src/sections/Highlights.tsx`
 
 ---
 
-## 7. Risks & Mitigations
+## 5. Test strategy
+
+Per project convention: **no unit tests**. Verification is:
+
+1. `pnpm build` — TypeScript + Vite produce a clean static bundle.
+2. `pnpm lint` — ESLint passes (warnings already known on shadcn `ui/*` files are allowed).
+3. `pnpm dev` — manual smoke: scroll through, verify pill appears past hero, anchors scroll to the right place, active link updates, progress bar tracks, reveals fire once, dark mode toggles, mobile layout reflows.
+
+If lint/build fails — fix the code, don't suppress. Cap at 3 attempts before stopping and reporting.
+
+---
+
+## 6. Risks
 
 | Risk | Mitigation |
 |---|---|
-| `pnpm` not on PATH | Fall back to `npm` automatically. |
-| Tailwind v4 + shadcn/ui interop quirks | Pin Tailwind to **v4.x** and use shadcn CLI's v4-aware template; or downgrade to Tailwind v3 if blocked. |
-| `profile.png` missing from old CV | Use shadcn `<Avatar>` initials fallback. |
-| Vercel Node version mismatch | `engines.node = ">=20"` in package.json. |
-| Long install on slow network | Time-box `npm install` to 5 min; report and pause if exceeded. |
+| Display font (`Fraunces`) slows first paint | `preconnect` + `display=swap`; fall back to system serif. |
+| IntersectionObserver janky on Safari for first-paint elements | Use `threshold: 0.1` + `rootMargin` headroom; visible-by-default until JS hydrates (no `opacity:0` before JS). |
+| Floating pill collides with hero text on mobile | Pill is hidden until scroll past hero on all breakpoints. |
+| `prefers-reduced-motion` users | `Reveal` short-circuits to visible immediately when the media query matches. |
 
 ---
 
-## 8. Sequence
+## 7. Sequence
 
-1. **Plan confirmation** (this step — user approval gate).
-2. Scaffold Vite project (`npm create vite@latest cv_next -- --template react-ts`, but into existing empty folder).
-3. Install Tailwind v4 + shadcn/ui + `lucide-react`.
-4. Write `src/CLAUDE.md` (techstack/standards) **before** further coding.
-5. Build data file + components + sections in parallel where independent.
-6. Add `vercel.json`, copy assets, write README.
-7. Verify (build / lint / dev preview).
-8. Write CHANGELOGS.md + .claude/MEMORY.md + update this plan with completion status.
+1. **Plan confirmation** (user gate — this step).
+2. Update `src/CLAUDE.md` (techstack + new component conventions).
+3. Create `Reveal.tsx`, `ScrollProgress.tsx`, `TopNav.tsx` in parallel.
+4. Update `Section.tsx`, `ResumeItem.tsx`, `SkillBadge.tsx` in parallel.
+5. Restyle all sections + `About` hero in parallel.
+6. Rewrite `App.tsx`, edit `index.html` + `index.css` + `data/cv.ts`.
+7. Delete `Sidebar.tsx` and `Highlights.tsx`.
+8. Verify: `pnpm build` → `pnpm lint` → `pnpm dev` (manual scroll check).
+9. Update `CHANGELOGS.md`, `.claude/MEMORY.md`, and this plan's completion status.
 
 ---
 
-## 9. Completion Status
+## 8. Completion status
 
-- [x] Plan approved (user confirmed via AskUserQuestion, 2026-05-21)
-- [x] Scaffold complete (Vite 6.4.2, React 18.3.1, TS 5.7.3, Tailwind 4.3.0)
-- [x] Data ported (all of old `cv/public/html/*.html` → `src/data/cv.ts`)
-- [x] All sections rendered (About / Experience / Education / Skills / Highlights / Projects / Interests)
-- [x] Build / lint / dev pass — `pnpm build` (2.42s), `pnpm lint` (0 errors, 3 shadcn-pattern warnings), `pnpm dev` (ready in 412ms, HTTP 200 for `/`, `/src/App.tsx`, `/src/data/cv.ts`)
-- [x] Vercel config in place (`vercel.json` with SPA rewrite + Vite preset)
-- [x] Summary docs written (this file, `CHANGELOGS.md`, `.claude/MEMORY.md`)
+- [x] Plan approved (user confirmed 2026-05-25)
+- [x] `src/CLAUDE.md` updated with new UI design system + component conventions
+- [x] New components created (`TopNav.tsx`, `ScrollProgress.tsx`, `Reveal.tsx`)
+- [x] Shell + section components restyled (Section, ResumeItem, SkillBadge, all sections)
+- [x] Highlights section + Sidebar removed (files deleted, data emptied)
+- [x] Build (2.52s) / lint (0 errors, 3 expected warnings) / dev (HTTP 200) pass
+- [x] CHANGELOGS.md + .claude/MEMORY.md updated
 
-## 10. Known follow-ups
+## 9. Known limitations
 
-- **Highlights section is a placeholder** — user opted to fill in post-2023 work later. Edit `src/data/cv.ts` → `highlights` array.
-- 3 ESLint warnings remain (`react-refresh/only-export-components` on `theme-provider.tsx`, `ui/badge.tsx`, `ui/button.tsx`). These are intentional shadcn patterns (variants + component co-exported). Suppress by splitting variant definitions into separate files if desired.
-- Profile photo copied from old CV (`cv/public/img/profile.png` → `public/profile.png`). Replace with a fresher photo when available.
-- `pnpm` v10.33.0 in use; v11.1.3 available. Not blocking.
+- Visual scroll effects were **not eyeballed in a real browser** — the assistant could not drive one. Build/lint/dev probe is green, but timing/feel of the floating pill, progress bar, and reveal transitions should be human-verified on `pnpm dev`.
+- Unused shadcn primitives (`ui/card.tsx`, `ui/badge.tsx`, `ui/avatar.tsx`, `ui/separator.tsx`) remain in the repo as scaffolding — harmless, intended for future reuse.
+- Google Fonts (`Fraunces`, `Inter`) loaded via `<link>`, not self-hosted — adds a network dependency on first paint. Acceptable for a personal CV; can be switched to `@fontsource-variable/*` packages if desired.

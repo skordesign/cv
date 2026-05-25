@@ -18,29 +18,34 @@ export function ResumeItem({
   className,
 }: ResumeItemProps) {
   return (
-    <div
+    <article
       className={cn(
-        "flex flex-col gap-2 md:flex-row md:items-start md:justify-between",
+        "grid gap-3 border-t border-border/40 pt-6 first:border-t-0 first:pt-0 md:grid-cols-[10rem_1fr] md:gap-8",
         className,
       )}
     >
-      <div className="flex-1 space-y-1">
-        <h3 className="text-lg font-semibold leading-tight">{title}</h3>
-        {subheading && (
-          <p className="text-sm font-medium text-muted-foreground">{subheading}</p>
-        )}
-        {children && <div className="pt-1 text-sm leading-relaxed">{children}</div>}
-      </div>
-      <div className="md:w-44 md:text-right">
+      <div className="md:pt-1">
         <span
           className={cn(
-            "inline-flex items-center gap-1.5 text-sm font-medium text-brand",
-            current && "after:inline-block after:h-2 after:w-2 after:rounded-full after:bg-emerald-500 after:content-['']",
+            "inline-flex items-center gap-2 text-xs font-medium uppercase tracking-wider text-muted-foreground",
+            current &&
+              "before:inline-block before:h-1.5 before:w-1.5 before:rounded-full before:bg-emerald-500 before:content-['']",
           )}
         >
           {period}
         </span>
       </div>
-    </div>
+      <div className="space-y-1.5">
+        <h3 className="text-lg font-medium leading-snug">{title}</h3>
+        {subheading && (
+          <p className="text-sm text-muted-foreground">{subheading}</p>
+        )}
+        {children && (
+          <div className="pt-1 text-sm leading-relaxed text-foreground/80">
+            {children}
+          </div>
+        )}
+      </div>
+    </article>
   );
 }

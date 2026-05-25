@@ -1,7 +1,7 @@
 import { ExternalLink } from "lucide-react";
 
+import { Reveal } from "@/components/Reveal";
 import { Section } from "@/components/Section";
-import { Badge } from "@/components/ui/badge";
 import { projects, type Project } from "@/data/cv";
 
 function groupBy<T, K extends string>(arr: T[], key: (t: T) => K): Record<K, T[]> {
@@ -17,30 +17,38 @@ function groupBy<T, K extends string>(arr: T[], key: (t: T) => K): Record<K, T[]
 
 function ProjectItem({ p }: { p: Project }) {
   return (
-    <div className="flex flex-col gap-2 border-l-2 border-border pl-4 md:flex-row md:items-start md:justify-between">
-      <div className="flex-1 space-y-1.5">
-        <div className="flex flex-wrap items-center gap-2">
-          <h4 className="text-base font-semibold">{p.name}</h4>
-          {p.failed && <Badge variant="destructive">Failed</Badge>}
+    <article className="grid gap-3 border-t border-border/40 pt-6 first:border-t-0 first:pt-0 md:grid-cols-[10rem_1fr] md:gap-8">
+      <div className="md:pt-1">
+        <span className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
+          {p.period}
+        </span>
+      </div>
+      <div className="space-y-2.5">
+        <div className="flex flex-wrap items-baseline gap-3">
+          <h4 className="text-lg font-medium leading-snug">{p.name}</h4>
+          {p.failed && (
+            <span className="rounded-full border border-destructive/40 px-2 py-0.5 text-[10px] font-medium uppercase tracking-wider text-destructive">
+              Failed
+            </span>
+          )}
         </div>
-        <p className="text-xs font-medium text-muted-foreground">{p.meta}</p>
-        <dl className="grid gap-x-4 gap-y-1 text-sm md:grid-cols-[80px_1fr]">
-          <dt className="text-muted-foreground">Role</dt>
-          <dd>{p.role}</dd>
-          <dt className="text-muted-foreground">Task</dt>
-          <dd>{p.task}</dd>
-          <dt className="text-muted-foreground">Stack</dt>
-          <dd className="text-foreground/90">{p.tech}</dd>
-        </dl>
+        <p className="text-xs uppercase tracking-wider text-muted-foreground">
+          {p.meta} · {p.role}
+        </p>
+        <p className="text-sm leading-relaxed text-foreground/80">{p.task}</p>
+        <p className="text-xs text-muted-foreground">
+          <span className="text-foreground/70">Stack: </span>
+          {p.tech}
+        </p>
         {p.link && (
-          <div className="flex flex-wrap items-center gap-3 pt-1">
+          <div className="flex flex-wrap items-center gap-4 pt-1">
             {p.link.map((l) => (
               <a
                 key={l.href}
                 href={l.href}
                 target="_blank"
                 rel="noreferrer noopener"
-                className="inline-flex items-center gap-1 text-xs text-brand hover:underline"
+                className="inline-flex items-center gap-1.5 text-xs font-medium text-brand underline-offset-4 hover:underline"
               >
                 {l.label}
                 <ExternalLink className="h-3 w-3" />
@@ -49,10 +57,7 @@ function ProjectItem({ p }: { p: Project }) {
           </div>
         )}
       </div>
-      <div className="shrink-0 md:w-44 md:text-right">
-        <span className="text-xs font-medium text-brand">{p.period}</span>
-      </div>
-    </div>
+    </article>
   );
 }
 
@@ -61,19 +66,21 @@ export function Projects() {
   const orgs = Object.keys(grouped);
 
   return (
-    <Section id="projects" title="Projects">
-      <div className="space-y-10">
+    <Section id="projects" eyebrow="04 — Selected work" title="Projects.">
+      <div className="space-y-16">
         {orgs.map((org) => (
-          <div key={org}>
-            <h3 className="mb-4 text-lg font-semibold uppercase tracking-wide text-brand">
-              {org}
-            </h3>
-            <div className="space-y-6">
-              {grouped[org].map((p) => (
-                <ProjectItem key={p.name} p={p} />
-              ))}
+          <Reveal key={org}>
+            <div>
+              <h3 className="mb-6 font-serif text-2xl font-light italic text-brand">
+                {org}
+              </h3>
+              <div className="space-y-6">
+                {grouped[org].map((p) => (
+                  <ProjectItem key={p.name} p={p} />
+                ))}
+              </div>
             </div>
-          </div>
+          </Reveal>
         ))}
       </div>
     </Section>

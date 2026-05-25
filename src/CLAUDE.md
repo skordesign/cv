@@ -37,7 +37,9 @@ src/
 │   ├── ui/                 ← shadcn primitives (Button, Card, Badge, Separator, Avatar)
 │   ├── theme-provider.tsx  ← dark/light context
 │   ├── theme-toggle.tsx
-│   ├── Sidebar.tsx
+│   ├── TopNav.tsx          ← floating pill nav, appears past hero
+│   ├── ScrollProgress.tsx  ← 2px top progress bar
+│   ├── Reveal.tsx          ← IntersectionObserver fade+slide-up wrapper
 │   ├── Section.tsx
 │   ├── ResumeItem.tsx
 │   └── SkillBadge.tsx
@@ -46,7 +48,6 @@ src/
     ├── Experience.tsx
     ├── Education.tsx
     ├── Skills.tsx
-    ├── Highlights.tsx
     ├── Projects.tsx
     └── Interests.tsx
 ```
@@ -54,8 +55,16 @@ src/
 ## Adding content
 
 - New experience / project → add an entry to `src/data/cv.ts`. **Do not** edit section components for content changes.
-- New section → create `src/sections/<Name>.tsx`, add to `App.tsx` and `Sidebar.tsx` nav links.
+- New section → create `src/sections/<Name>.tsx`, add to `App.tsx` and `TopNav.tsx` nav links.
 - New shadcn primitive → write by hand into `@/components/ui/`; reference shadcn docs for the source.
+
+## UI design system (2026-05-25 rework)
+
+- **Look**: typographic / editorial. Display serif (`Fraunces`) for headings, `Inter` for body. Hairline dividers (`border-border/40`). Monochrome + single accent (`--brand`). No card chrome.
+- **Navigation**: no sidebar. `TopNav.tsx` renders a floating pill that fades in once the user scrolls past the hero (~80vh). Active section computed via `IntersectionObserver`.
+- **Scroll**: every section item wraps in `<Reveal>` — fades in + translates up 12px on enter. Honors `prefers-reduced-motion`. A `ScrollProgress` bar tracks page-scroll fraction at the top edge.
+- **Heading rhythm**: section uses an eyebrow label (uppercase, small, brand) above a large display title. Items use a two-column layout (period on the right, content on the left) with hairline dividers between them.
+- **Animations**: pure CSS transitions + native `IntersectionObserver` only. **No** `framer-motion`, no `react-intersection-observer`.
 
 ## Commands
 

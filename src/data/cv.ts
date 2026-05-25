@@ -311,15 +311,8 @@ export const projects: Project[] = [
   },
 ];
 
-// Placeholder — user will fill in post-2023 work
-export const highlights: Highlight[] = [
-  {
-    title: "Add a highlight here",
-    description:
-      "Recent shipped work, OSS contributions, talks, or notable side-projects since the old CV (Sept 2023). Edit src/data/cv.ts to fill this in.",
-    tags: ["TODO"],
-  },
-];
+// Placeholder for post-2023 work — section is hidden until populated.
+export const highlights: Highlight[] = [];
 
 export const interests: Interest[] = [
   {
